@@ -8,7 +8,16 @@ import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { RuntimeSnapshot } from '../shared/contracts'
 import { resolvePptOfficePatch, writePptOfficeEnabled } from './optional-features'
-import { resolveDesktopPackageRoot, resolveDesktopPatchPath, resolveDshHome, resolveDshSourceEntry, resolveHarnessLogPath, resolveLaunchRoot, resolveRepoRoot } from './paths'
+import {
+  resolveAppIconPath,
+  resolveDesktopPackageRoot,
+  resolveDesktopPatchPath,
+  resolveDshHome,
+  resolveDshSourceEntry,
+  resolveHarnessLogPath,
+  resolveLaunchRoot,
+  resolveRepoRoot,
+} from './paths'
 import { LanPairingBridge } from './phone/lan-bridge'
 import { runPluginCommand, type PluginAction } from './plugin-command'
 import { HarnessRuntime, NORMAL_PROFILE } from './runtime/harness-runtime'
@@ -77,10 +86,12 @@ async function boot(): Promise<void> {
   }
 
   function createWindow(): BrowserWindow {
+    const icon = resolveAppIconPath(desktopRoot)
     const window = new BrowserWindow({
       width: 1280,
       height: 840,
       show: false,
+      ...(icon ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.cjs'),
         contextIsolation: true,

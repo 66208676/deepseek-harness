@@ -87,3 +87,19 @@ export function resolveLaunchRoot(): string {
 export function resolveHarnessLogPath(): string {
   return join(app.getPath('logs'), 'harness.log')
 }
+
+/**
+ * Packaged or development app icon for the BrowserWindow and tray surfaces.
+ * Prefers `build/icon.png`, then `build/icon.ico`.
+ * @param desktopRoot - `apps/desktop` directory
+ * @returns absolute icon path, or undefined when neither file exists
+ */
+export function resolveAppIconPath(
+  desktopRoot: string = resolveDesktopPackageRoot(),
+): string | undefined {
+  const png = join(desktopRoot, 'build/icon.png')
+  if (existsSync(png)) return png
+  const ico = join(desktopRoot, 'build/icon.ico')
+  if (existsSync(ico)) return ico
+  return undefined
+}

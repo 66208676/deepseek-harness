@@ -7,6 +7,7 @@ module.exports = {
     buildResources: 'build',
   },
   files: ['out/**/*', 'patches/**/*', 'package.json'],
+  // electron-builder reads build/icon.png (and icon.ico on Windows) from buildResources.
   publish: {
     provider: 'github',
     owner: '66208676',
@@ -15,11 +16,14 @@ module.exports = {
   asar: true,
   win: {
     target: ['dir'],
+    icon: 'build/icon.ico',
   },
   mac: {
     target: ['dir'],
+    icon: 'build/icon.png',
   },
   linux: {
     target: ['dir'],
+    icon: 'build/icon.png',
   },
 }
