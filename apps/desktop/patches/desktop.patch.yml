@@ -1,0 +1,5 @@
+# Desktop cordis overlay for the web profile.
+# Keep desktop-only composition here. Do not edit packages/bundle/* for shell behavior.
+# MVP: empty overlay — source launch uses a real Node + tsx, so packaged HMR
+# fallbacks from dataelement/dsh-desktop are not required yet.
+[]
