@@ -7,6 +7,11 @@ module.exports = {
     buildResources: 'build',
   },
   files: ['out/**/*', 'patches/**/*', 'package.json'],
+  publish: {
+    provider: 'github',
+    owner: '66208676',
+    repo: 'deepseek-harness',
+  },
   asar: true,
   win: {
     target: ['dir'],

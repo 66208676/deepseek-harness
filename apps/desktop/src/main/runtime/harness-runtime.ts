@@ -15,11 +15,16 @@ import { resolveNodeExecutable } from './node-executable'
 /** Default preferred loopback port when free. */
 export const DEFAULT_HARNESS_PORT = 43129
 
+/** Shipped web profile name. The `web` subcommand is this profile. */
+export const NORMAL_PROFILE = 'web'
+
 export interface HarnessRuntimeOptions {
   /** Absolute path to `apps/cli/src/bin.ts` (or built `lib/bin.js`). */
   dshEntryPath: string
-  /** Absolute path to the desktop cordis patch YAML. */
-  dshPatchPath: string
+  /** Cordis overlay files passed as repeatable `--patch` (normal profile only). */
+  patchPaths?: readonly string[]
+  /** Profile under `DSH_HOME/profiles`. Defaults to {@link NORMAL_PROFILE}. */
+  profile?: string
   /** `DSH_HOME` for profiles, sessions, and settings. */
   dshHome: string
   /** Repository root used as cwd so workspace resolution matches `pnpm dsh`. */
@@ -32,21 +37,23 @@ export interface HarnessRuntimeOptions {
 }
 
 /**
- * Build argv after the Node/tsx launcher for `dsh web`.
+ * Build argv after the Node/tsx launcher for a web-capable profile.
+ * The normal profile uses the `web` alias. Any other profile uses `--profile`,
+ * and launcher-owned flags stay before the app flags (`--no-open`, `--host`, `--port`).
  * @param port - loopback listen port
- * @param patchPath - optional desktop patch
- * @returns CLI arguments starting with `web`
+ * @param patchPaths - overlay files, in order
+ * @param profile - profile name
+ * @returns CLI arguments
  */
-export function buildHarnessArguments(port: number, patchPath?: string): string[] {
-  return [
-    'web',
-    ...(patchPath ? ['--patch', patchPath] : []),
-    '--no-open',
-    '--host',
-    '127.0.0.1',
-    '--port',
-    String(port),
-  ]
+export function buildHarnessArguments(
+  port: number,
+  patchPaths: readonly string[] = [],
+  profile: string = NORMAL_PROFILE,
+): string[] {
+  const patches = patchPaths.flatMap(patchPath => ['--patch', patchPath])
+  const appFlags = ['--no-open', '--host', '127.0.0.1', '--port', String(port)]
+  if (profile === NORMAL_PROFILE) return ['web', ...patches, ...appFlags]
+  return ['--profile', profile, ...patches, ...appFlags]
 }
 
 /**
@@ -144,8 +151,45 @@ export class HarnessRuntime {
   private launchToken: string | undefined
   private logStream: WriteStream | undefined
   private stdoutRemainder = ''
+  private profile: string
+  private patchPaths: readonly string[]
 
-  constructor(private readonly options: HarnessRuntimeOptions) {}
+  constructor(private readonly options: HarnessRuntimeOptions) {
+    this.profile = options.profile ?? NORMAL_PROFILE
+    this.patchPaths = options.patchPaths ?? []
+  }
+
+  /**
+   * Overlay files for the next normal-profile start.
+   * @param patchPaths - absolute patch files
+   */
+  setPatchPaths(patchPaths: readonly string[]): void {
+    this.patchPaths = patchPaths
+  }
+
+  /**
+   * Profile the next {@link start} boots.
+   * @returns profile name
+   */
+  getProfile(): string {
+    return this.profile
+  }
+
+  /**
+   * Select the profile used by the next start. Does not restart by itself.
+   * @param profile - profile directory name under `DSH_HOME/profiles`
+   */
+  setProfile(profile: string): void {
+    this.profile = profile
+  }
+
+  /**
+   * Announced Harness URL, including the launch token when present.
+   * @returns absolute URL, or undefined before the ready line
+   */
+  getReadyUrl(): string | undefined {
+    return this.url
+  }
 
   /**
    * Current runtime snapshot for the UI.
@@ -171,13 +215,10 @@ export class HarnessRuntime {
       this.setState('failed', `Harness entry was not found: ${this.options.dshEntryPath}`)
       return
     }
-    const patchPath = existsSync(this.options.dshPatchPath)
-      ? this.options.dshPatchPath
-      : undefined
-    if (!patchPath) {
-      this.writeLog(
-        `[desktop] desktop patch missing at ${this.options.dshPatchPath}; launching without --patch`,
-      )
+    const patchPaths = this.patchPaths.filter(patchPath => existsSync(patchPath))
+    const skipped = this.patchPaths.filter(patchPath => !existsSync(patchPath))
+    for (const missing of skipped) {
+      this.writeLog(`[desktop] patch missing at ${missing}; skipping`)
     }
 
     await mkdir(this.options.dshHome, { recursive: true })
@@ -187,7 +228,8 @@ export class HarnessRuntime {
     const preferredPort = this.options.preferredPort ?? DEFAULT_HARNESS_PORT
     const port = await reserveLoopbackPort(preferredPort)
     const baseUrl = `http://127.0.0.1:${port}`
-    const harnessArgs = buildHarnessArguments(port, patchPath)
+    const activePatches = this.profile === NORMAL_PROFILE ? patchPaths : []
+    const harnessArgs = buildHarnessArguments(port, activePatches, this.profile)
     const node = resolveNodeExecutable()
     const entryIsBuiltJs = this.options.dshEntryPath.endsWith('.js')
     const nodeArgs = entryIsBuiltJs
@@ -201,8 +243,9 @@ export class HarnessRuntime {
     this.writeLog(`[desktop] repo ${this.options.repoRoot}`)
     this.writeLog(`[desktop] entry ${this.options.dshEntryPath}`)
     this.writeLog(`[desktop] node ${node.executablePath} runAsNode=${node.runAsNode}`)
+    this.writeLog(`[desktop] profile ${this.profile}`)
     this.writeLog(`[desktop] endpoint ${baseUrl}`)
-    this.setState('starting', 'Starting DeepSeek Harness…')
+    this.setState('starting', `Starting DeepSeek Harness (${this.profile})…`)
 
     const env: NodeJS.ProcessEnv = {
       ...process.env,

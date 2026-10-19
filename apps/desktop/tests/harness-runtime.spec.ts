@@ -15,10 +15,19 @@ describe('desktop harness launch helpers', () => {
       '--port',
       '43129',
     ])
-    expect(buildHarnessArguments(8080, '/tmp/desktop.patch.yml')).toEqual([
+    expect(buildHarnessArguments(8080, ['/tmp/desktop.patch.yml'])).toEqual([
       'web',
       '--patch',
       '/tmp/desktop.patch.yml',
+      '--no-open',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      '8080',
+    ])
+    expect(buildHarnessArguments(8080, [], 'desktop-safe-mode')).toEqual([
+      '--profile',
+      'desktop-safe-mode',
       '--no-open',
       '--host',
       '127.0.0.1',

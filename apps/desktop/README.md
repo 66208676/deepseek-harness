@@ -55,6 +55,16 @@ After merging upstream Harness, re-check the launch contract before bumping the 
 
 Shell improvements may be cherry-picked from dataelement `src/main/runtime/*` and security policy; use the web-casa upgrade checklist for supervision regressions (heartbeat, identity, env hygiene) without adopting Tauri.
 
-## Out of scope (MVP)
+## Desktop product controls
 
-Auto-update, phone bridge, Safe Mode, PPT/Office, plugin market installer, and bundling a separate Node/npm pin of `@deepseek-ai/dsh`.
+The Harness menu adds five shell-owned controls. None of them edit `packages/` or the normal profile's plugin directory except `dsh plugin add` / `remove`, which is the existing CLI.
+
+- **Safe Mode** boots profile `desktop-safe-mode` (`@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app` only). `--safe-mode` selects it at launch. `profiles/web` is left in place.
+- **Updates** use `electron-updater` against GitHub `66208676/deepseek-harness` and only in a packaged macOS or Windows build. Download and install wait for a dialog choice. Development launches do not contact the feed.
+- **Plugins** prompt for a package spec, ask for confirmation, then run `dsh plugin --profile <name> add|remove`. The Harness window preload does not expose that command.
+- **Phone** opens a short-lived LAN reverse proxy. The phone uses a pairing query; Harness stays on `127.0.0.1`. Disconnect closes the proxy. Public tunnels are not included.
+- **PPT/Office** can be requested from the menu, but the composer overlay is written only when `optional/ppt/LICENSE-REVIEWED` and `optional/ppt/package.json` both exist. See [optional/ppt/README.md](optional/ppt/README.md).
+
+## Still out of scope
+
+Public phone tunnels, a browsable plugin market UI, vendored PPT/Office runtimes, and a separate Node/npm pin of `@deepseek-ai/dsh`.

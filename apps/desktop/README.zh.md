@@ -55,6 +55,16 @@ pnpm package:dir      # optional local unpackaged dir build
 
 壳侧改进可从 dataelement 的 `src/main/runtime/*` 与安全策略 cherry-pick；监督回归（heartbeat、identity、env hygiene）按 web-casa 升级清单核对，但不采用 Tauri。
 
-## MVP 不做
+## 桌面产品控制
 
-自动更新、手机桥、Safe Mode、PPT/Office、插件市场安装器、以及另绑独立 Node / npm pin 的 `@deepseek-ai/dsh`。
+Harness 菜单增加五项壳内控制。除 `dsh plugin add` / `remove`（既有 CLI）外，它们不改 `packages/`，也不删除正常 profile 的插件目录。
+
+- **Safe Mode** 启动 profile `desktop-safe-mode`（仅 `@deepseek-ai/dsh-base` 与 `@deepseek-ai/dsh-web-app`）。启动参数 `--safe-mode` 选中它。`profiles/web` 保留不动。
+- **更新** 使用 `electron-updater`，源为 GitHub `66208676/deepseek-harness`，且仅在已打包的 macOS 或 Windows 构建中检查。下载与安装都等对话框确认。开发态不访问更新源。
+- **插件** 先询问包规格，再确认，然后执行 `dsh plugin --profile <name> add|remove`。Harness 窗口的 preload 不暴露该命令。
+- **手机** 打开短时局域网反向代理。手机使用配对 query；Harness 仍在 `127.0.0.1`。断开即关闭代理。不含公网隧道。
+- **PPT/Office** 可从菜单请求开启，但只有 `optional/ppt/LICENSE-REVIEWED` 与 `optional/ppt/package.json` 同时存在时才写入 composer overlay。见 [optional/ppt/README.zh.md](optional/ppt/README.zh.md)。
+
+## 仍不做
+
+公网手机隧道、可浏览的插件市场 UI、随仓携带的 PPT/Office 运行时，以及另绑独立 Node / npm pin 的 `@deepseek-ai/dsh`。

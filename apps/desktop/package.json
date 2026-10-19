@@ -18,6 +18,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json",
     "package:dir": "npm run build && electron-builder --dir --config electron-builder.dev.cjs"
   },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "electron": "43.0.0",

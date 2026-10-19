@@ -12,6 +12,7 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve('src/preload/index.ts'),
+          'shell-dialog': resolve('src/preload/shell-dialog.ts'),
         },
         output: {
           format: 'cjs',

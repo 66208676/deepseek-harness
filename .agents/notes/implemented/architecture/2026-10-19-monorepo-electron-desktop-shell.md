@@ -26,4 +26,5 @@ Root scripts `desktop:dev` / `desktop:build` delegate to the package. Topology f
 
 - Developers run `pnpm desktop:dev` against the same source CLI as `pnpm dsh web`; Harness behavior stays one codebase.
 - Upstream Harness merges stay localized: desktop regressions are checked against the `dsh web` launch contract (`--host`/`--port`/`--no-open`, ready-line marker), not against a forked agent runtime.
-- Packaged Electron-as-Node distribution, auto-update, Safe Mode, phone bridge, and Office/PPT remain deferred; the MVP uses a system/npm Node plus tsx for source launch.
+- Source launch still uses system/npm Node plus tsx. Packaged Electron-as-Node distribution remains deferred.
+- Shell-owned product controls live under `apps/desktop/src/main/` only: Safe Mode profile `desktop-safe-mode`, `electron-updater` against this fork's GitHub Releases (packaged macOS/Windows), `dsh plugin` add/remove after confirm, LAN phone pairing proxy (no public tunnel), and PPT/Office opt-in gated on `optional/ppt/LICENSE-REVIEWED` plus a vendored `package.json`.
