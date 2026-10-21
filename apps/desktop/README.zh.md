@@ -61,7 +61,7 @@ Harness 菜单增加五项壳内控制。除 `dsh plugin add` / `remove`（既�
 
 - **Safe Mode** 启动 profile `desktop-safe-mode`（仅 `@deepseek-ai/dsh-base` 与 `@deepseek-ai/dsh-web-app`）。启动参数 `--safe-mode` 选中它。`profiles/web` 保留不动。
 - **更新** 使用 `electron-updater`，源为 GitHub `66208676/deepseek-harness`，且仅在已打包的 macOS 或 Windows 构建中检查。下载与安装都等对话框确认。开发态不访问更新源。
-- **插件** 先询问包规格，再确认，然后执行 `dsh plugin --profile <name> add|remove`。Harness 窗口的 preload 不暴露该命令。
+- **插件** 先询问包规格，再确认，然后执行 `dsh plugin --profile <name> add|remove`。Harness 窗口的 preload 不暴露该命令。桌面 patch 会挂上 `dsh-desktop-host-runtime`，并设置 `DSH_SURFACE=desktop`，使 `dsh-purge` 等插件经 Electron 重启，而不是另开浏览器跑 `dsh web`。同一子进程的 `DSH_BASE` 指向工作区 `node_modules/.pnpm/node_modules/@deepseek-ai`，`DSH_DESKTOP_INSTALL` 指向仓库根，这是没有打包 `resources/app` 时 purge 要找的插件根。
 - **手机** 打开短时局域网反向代理。手机使用配对 query；Harness 仍在 `127.0.0.1`。断开即关闭代理。不含公网隧道。
 - **PPT/Office** 可从菜单请求开启，但只有 `optional/ppt/LICENSE-REVIEWED` 与 `optional/ppt/package.json` 同时存在时才写入 composer overlay。见 [optional/ppt/README.zh.md](optional/ppt/README.zh.md)。
 

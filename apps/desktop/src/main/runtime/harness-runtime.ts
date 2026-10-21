@@ -31,9 +31,19 @@ export interface HarnessRuntimeOptions {
   repoRoot: string
   /** Append-only log file. */
   logPath: string
+  /**
+   * Extra environment for the Harness child (desktop control URL, surface, …).
+   * Merged over the process env; does not override `DSH_HOME`.
+   */
+  childEnv?: NodeJS.ProcessEnv
   preferredPort?: number
   startupTimeoutMs?: number
   onChanged(snapshot: RuntimeSnapshot): void
+  /**
+   * Called when the Harness child exits while the shell still expected it to
+   * stay up (for example after dsh-purge schedules an external web restart).
+   */
+  onUnexpectedExit?: (detail: { code: number | null; signal: NodeJS.Signals | null }) => void
 }
 
 /**
@@ -249,6 +259,7 @@ export class HarnessRuntime {
 
     const env: NodeJS.ProcessEnv = {
       ...process.env,
+      ...this.options.childEnv,
       DSH_HOME: this.options.dshHome,
       NO_COLOR: '1',
       DSH_TELEMETRY_DISABLED: process.env.DSH_TELEMETRY_DISABLED ?? '1',
@@ -289,7 +300,9 @@ export class HarnessRuntime {
       this.writeLog(`[node] Harness process exited (${detail})`)
       if (this.child !== child) return
       this.child = undefined
+      const wasReady = this.phase === 'ready'
       this.setState('failed', `Harness stopped unexpectedly (${detail}).`)
+      if (wasReady) this.options.onUnexpectedExit?.({ code, signal })
     })
 
     const ready = await waitUntilReady(

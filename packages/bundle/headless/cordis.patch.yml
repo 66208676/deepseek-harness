@@ -6,8 +6,7 @@
 
 - id: system-prompt
   config:
-    persona: >-
-      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
+    persona: ""
 
 - id: tools
   config:

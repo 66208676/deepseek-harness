@@ -18,6 +18,7 @@ import {
   resolveLaunchRoot,
   resolveRepoRoot,
 } from './paths'
+import { startDesktopControlServer } from './control-server'
 import { LanPairingBridge } from './phone/lan-bridge'
 import { runPluginCommand, type PluginAction } from './plugin-command'
 import { HarnessRuntime, NORMAL_PROFILE } from './runtime/harness-runtime'
@@ -56,8 +57,13 @@ async function boot(): Promise<void> {
 
   let mainWindow: BrowserWindow | undefined
   let loadedHarnessUrl: string | undefined
+  let restartingHarness = false
   const phone = new LanPairingBridge()
   const stopUpdates = startUpdateManager()
+
+  const control = await startDesktopControlServer(() => {
+    void restartHarnessInShell('plugin')
+  })
 
   const runtime = new HarnessRuntime({
     dshEntryPath: resolveDshSourceEntry(repoRoot),
@@ -66,8 +72,20 @@ async function boot(): Promise<void> {
     dshHome,
     repoRoot,
     logPath: resolveHarnessLogPath(),
+    childEnv: {
+      DSH_SURFACE: 'desktop',
+      DSH_DESKTOP_CONTROL_URL: control.url,
+      // Source launch has no resources/app/@deepseek-ai tree. dsh-purge's desktop
+      // locator accepts DSH_BASE only when it sits inside DSH_DESKTOP_INSTALL.
+      DSH_BASE: join(repoRoot, 'node_modules', '.pnpm', 'node_modules', '@deepseek-ai'),
+      DSH_DESKTOP_INSTALL: repoRoot,
+    },
     onChanged: (snapshot) => {
       void onRuntimeChanged(snapshot)
+    },
+    onUnexpectedExit: () => {
+      // dsh-purge's web restart path may have spawned a browser; reclaim Harness.
+      void restartHarnessInShell('unexpected-exit')
     },
   })
 
@@ -141,6 +159,19 @@ async function boot(): Promise<void> {
 
     if (snapshot.phase === 'starting' || snapshot.phase === 'stopping') {
       await showSplash(snapshot.message)
+    }
+  }
+
+  async function restartHarnessInShell(reason: string): Promise<void> {
+    if (restartingHarness) return
+    restartingHarness = true
+    try {
+      await phone.stop()
+      await showSplash(`Restarting DeepSeek Harness (${reason})…`)
+      runtime.setPatchPaths(currentPatchPaths())
+      await runtime.start()
+    } finally {
+      restartingHarness = false
     }
   }
 
@@ -292,6 +323,7 @@ async function boot(): Promise<void> {
     stopUpdates()
     void phone.stop()
     void runtime.stop()
+    void control.close()
   })
 
   app.on('window-all-closed', () => {

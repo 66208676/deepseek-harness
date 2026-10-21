@@ -61,7 +61,7 @@ The Harness menu adds five shell-owned controls. None of them edit `packages/` o
 
 - **Safe Mode** boots profile `desktop-safe-mode` (`@deepseek-ai/dsh-base` and `@deepseek-ai/dsh-web-app` only). `--safe-mode` selects it at launch. `profiles/web` is left in place.
 - **Updates** use `electron-updater` against GitHub `66208676/deepseek-harness` and only in a packaged macOS or Windows build. Download and install wait for a dialog choice. Development launches do not contact the feed.
-- **Plugins** prompt for a package spec, ask for confirmation, then run `dsh plugin --profile <name> add|remove`. The Harness window preload does not expose that command.
+- **Plugins** prompt for a package spec, ask for confirmation, then run `dsh plugin --profile <name> add|remove`. The Harness window preload does not expose that command. The desktop patch loads `dsh-desktop-host-runtime` and sets `DSH_SURFACE=desktop` so plugins such as `dsh-purge` restart through Electron instead of opening a browser `dsh web`. The same child gets `DSH_BASE` pointed at the workspace `node_modules/.pnpm/node_modules/@deepseek-ai` and `DSH_DESKTOP_INSTALL` pointed at the repo root, which is the package root purge looks for when there is no packaged `resources/app`.
 - **Phone** opens a short-lived LAN reverse proxy. The phone uses a pairing query; Harness stays on `127.0.0.1`. Disconnect closes the proxy. Public tunnels are not included.
 - **PPT/Office** can be requested from the menu, but the composer overlay is written only when `optional/ppt/LICENSE-REVIEWED` and `optional/ppt/package.json` both exist. See [optional/ppt/README.md](optional/ppt/README.md).
 

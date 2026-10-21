@@ -28,3 +28,4 @@ DeepSeek Harness 已有 CLI 与 Web profile（`apps/cli`、`apps/web`），但�
 - 上游 Harness 合并保持局部化：桌面回归对照 `dsh web` 启动契约（`--host`/`--port`/`--no-open`、就绪行标记），而不是对照一份 fork 过的 agent 运行时。
 - 源码拉起仍用系统/npm Node + tsx。打包态 Electron-as-Node 分发仍延后。
 - 壳内产品控制只落在 `apps/desktop/src/main/`：Safe Mode profile `desktop-safe-mode`、对本 fork GitHub Releases 的 `electron-updater`（仅打包 macOS/Windows）、确认后的 `dsh plugin` 增删、局域网手机配对代理（无公网隧道），以及需 `optional/ppt/LICENSE-REVIEWED` 与 vendored `package.json` 才写的 PPT/Office 可选 overlay。
+- 源码启动的 Harness 没有打包后的 `resources/app/@deepseek-ai`。壳把 `DSH_BASE` 指到 `node_modules/.pnpm/node_modules/@deepseek-ai`，把 `DSH_DESKTOP_INSTALL` 指到仓库根，这样 `dsh-purge` 能对工作区包执行应用，并仍通过 `desktopRuntime.requestRestart` 重启。

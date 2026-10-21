@@ -1,5 +1,7 @@
 # Desktop cordis overlay for the web profile.
 # Keep desktop-only composition here. Do not edit packages/bundle/* for shell behavior.
-# MVP: empty overlay — source launch uses a real Node + tsx, so packaged HMR
-# fallbacks from dataelement/dsh-desktop are not required yet.
-[]
+- insert:
+    # Lets dsh-purge (and similar) call desktopRuntime.requestRestart so the
+    # Electron shell recycles Harness instead of spawning a browser `dsh web`.
+    - id: dsh-desktop-host-runtime
+      name: '../plugins/desktop-runtime/index.js'

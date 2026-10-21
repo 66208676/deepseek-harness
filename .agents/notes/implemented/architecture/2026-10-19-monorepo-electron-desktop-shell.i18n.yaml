@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-10-19-monorepo-electron-desktop-shell.md
-2026-10-19-monorepo-electron-desktop-shell.md: 21649aabe4133819cab6d60be356238456cb0e66
-2026-10-19-monorepo-electron-desktop-shell.zh.md: edf9d960b07d7e205d7212d3f8c57556aae57de3
+2026-10-19-monorepo-electron-desktop-shell.md: d4c0ad9f5d069c06f78c940734799fa6c586ec44
+2026-10-19-monorepo-electron-desktop-shell.zh.md: 74ee8cdf2165fc0b468931bc7333e95d0acea169
